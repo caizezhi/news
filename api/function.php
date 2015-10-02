@@ -81,7 +81,7 @@ function dbMysql()//连接数据库
 {
 	$dbhost = "localhost";
     $dbuser = "root";
-    $dbpass = "";
+    $dbpass = "dxsfzwljyzx";
     $dbname = "news";
     $db = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
