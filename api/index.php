@@ -9,7 +9,8 @@ $app->get("/news/:page/:limit/:type","news");
 $app->get("/guideblog/getall/:page","getAllguide");
 
 //管理员
-$app->get("/admin/","");
+$app->post("/admin/login","login");
+$app->post("/admin/logout","logout");
 
 $app->run();
 ?>
