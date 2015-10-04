@@ -30,6 +30,35 @@ function output($arr)//输出
 
 function checkLogin()//统一登录check
 {//等待接入
+	// return true;
+}
+
+function sortArr($array,$keys,$type='asc'){//将数组重新排序
+	if(!is_array($array)||empty($array)||!in_array(strtolower($type),array('asc','desc'))) return '';
+	$keysvalue=array();
+	foreach($array as $key=>$val){
+		$val[$keys]=str_replace('-','',$val[$keys]);
+		$val[$keys]=str_replace(' ','',$val[$keys]);
+		$val[$keys]=str_replace(':','',$val[$keys]);
+		$keysvalue[] =$val[$keys];
+	}
+	asort($keysvalue);
+	reset($keysvalue);
+	foreach($keysvalue as $key=>$vals){
+		$keysort[]=$key;
+	}
+	$keysvalue=array();
+	$count=count($keysort);
+	if(strtolower($type)!='asc'){
+		for($i=$count-1;$i>=0;$i--){
+			$keysvalue[]=$array[$keysort[$i]];
+		}
+	}else{
+		for($i=0;$i<$count;$i++){
+			$keysvalue[]=$array[$keysort[$i]];
+		}
+	}
+	return $keysvalue;
 }
 
 /************News*************/
@@ -60,7 +89,7 @@ function newsNotLogin($page,$limit,$type)
 		$page = 1;
 	}
 	$from = ($page-1) * $limit;
-	$sql = "SELECT * FROM `zx_article` WHERE `type` = {$type} ORDER BY `time` DESC LIMIT {$from},{$limit}";
+	$sql = "SELECT `aid`,`author`,`time`,`editor`,`from`,`type`,`thumb`,`click`,`title` FROM `zx_article` WHERE `type` = {$type} ORDER BY `time` DESC LIMIT {$from},{$limit}";
 	$get = $db->query($sql);
 	$res = $get->fetchAll(PDO::FETCH_OBJ);
 	if ($res) {
@@ -70,12 +99,54 @@ function newsNotLogin($page,$limit,$type)
 	}
 }
 
-function newsLogin($page,$limit,$type)
+function newsLogin($page,$limit,$type)//个性化订阅输出
 {
 	$page = trim($page);
 	$type = trim($type);
 	if (!is_numeric($page) || !is_numeric($type)) {
 		return error("invalid request");
+	}
+	$uid = 1234;//仅供测试使用
+	$sql = "SELECT `tag` FROM `zx_subscription` WHERE `uid` = {$uid}";
+	$db = dbMysql();
+	$subs = $db->query($sql)->fetchAll(PDO::FETCH_OBJ);
+	$article['count'] = 0;
+	$i = 0;
+	for ($x=0; $x < count($subs); $x++) {
+		$sql = "SELECT `aid` FROM `zx_tag` WHERE `tag` = '{$subs[$x]->tag}'";
+		$aids = $db->query($sql)->fetchAll(PDO::FETCH_OBJ);
+		for ($y=0; $y < count($aids); $y++) {
+			$sql = "SELECT `aid`,`author`,`time`,`editor`,`from`,`type`,`thumb`,`click`,`title` FROM `zx_article` WHERE `aid` = {$aids[$y]->aid}";
+			$news = $db->query($sql);
+			$article['news'][$i] = $news->fetch(PDO::FETCH_ASSOC);
+			$i++;
+		}
+		$article['count'] += count($aids);
+	}
+	$pageNum = ceil($article['count'] / $limit);//总页数
+	if (!is_numeric($page) || ($page > $pageNum) || ($page < 1)) {
+		$page = 1;
+	}
+	$article['news'] = sortArr($article['news'],'time','desc');//按编辑时间排序
+	$from = ($page-1) * $limit;
+	$articles = array_slice($article['news'], $from, $limit);
+	output($articles);
+}
+
+//get news by id
+function getNews($aid)
+{
+	if (!isset($aid) || !is_numeric($aid)) {
+		return error("invalid request");
+	}
+	$sql = "SELECT `title`,`content`,`author`,`editor`,`from`,`time`,`thumb` FROM `zx_article` WHERE `aid` = {$aid} LIMIT 1";
+	$db = dbMysql();
+	$news = $db->query($sql)->fetch(PDO::FETCH_ASSOC);
+	if ($news) {
+		$news['time'] = date("Y-m-d",$news['time']);
+		output($news);
+	}else{
+		error("none");
 	}
 }
 
