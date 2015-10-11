@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>编辑器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="keywords" content="opensource rich wysiwyg text editor jquery bootstrap execCommand html5" />
+    <meta name="description" content="This tiny jQuery Bootstrap WYSIWYG plugin turns any DIV into a HTML5 rich text editor" />
+    <link href="assets/js/google-code-prettify/prettify.css" rel="stylesheet">
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+		<link href="http://cdn.bootcss.com/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">
+    <link href="assets/css/bootstrap-datetimepicker.min.css" rel="stylesheet" media="screen">
+    <link rel="stylesheet" type="text/css" href="./assets/css/base.css">
+    <link href="assets/css/edit.css" rel="stylesheet">
+  </head>
+  <body>
+      <?php
+        include "nav.html";
+      ?>
+      <div class="edit-container">
+        <div id="edit-input" class="form-inline">
+          <div class="form-group edit-option col-xs-6">
+            <label for="title">标题<sub> (必填)</sub>：</label>
+            <input type="text" class="form-control" id="title" placeholder="标题">
+          </div>
+          <div class="form-group edit-option col-xs-6">
+            <label for="author">作者<sub> (必填)</sub>：</label>
+            <input type="text" class="form-control" id="author" placeholder="作者">
+          </div>
+          <br><br>
+          <div class="form-group edit-option col-xs-6">
+            <label for="from">来源：</label>
+            <input type="text" class="form-control" id="from" placeholder="来源">
+          </div>
+          <div class="form-group edit-option col-xs-6">
+            <label for="fromurl">来源网址：</label>
+            <input type="url" class="form-control" id="fromurl" placeholder="来源网址">
+          </div>
+          <br><br>
+          <div class="form-group edit-option col-xs-6">
+          <label for="time">发布时间<sub> (必填)</sub>：</label>
+            <input type="text" class="form-control" id="time" placeholder="发布时间">
+          </div>
+          <div class="form-group edit-option col-xs-6">
+            <label for="click">点击量：</label>
+            <input type="number" class="form-control" id="click" placeholder="点击量">
+          </div>
+          <br><br>
+          <div class="form-group edit-option col-xs-6">
+            <label for="category">分类 <sub> (必填)</sub>：</label>
+            <select class="form-control" id="category">
+              <option value="">选择分类</option>
+            </select>
+          </div>
+          <div class="form-group edit-option col-xs-6">
+            <label for="tag">标签：</label>
+            <input type="text" class="form-control" id="tag" title="多个标签使用空格隔开" placeholder="多个标签使用空格隔开">
+          </div>
+        </div>
+        <div id="edit-content">
+          <div class="btn-toolbar" data-role="editor-toolbar" data-target="#editor">
+            <div class="btn-group">
+              <a class="btn dropdown-toggle" data-toggle="dropdown" title="Font"><i class="icon-font"></i><b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                </ul>
+              </div>
+            <div class="btn-group">
+              <a class="btn dropdown-toggle" data-toggle="dropdown" title="Font Size"><i class="icon-text-height"></i>&nbsp;<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                <li><a data-edit="fontSize 5"><font size="5">大</font></a></li>
+                <li><a data-edit="fontSize 3"><font size="3">中</font></a></li>
+                <li><a data-edit="fontSize 1"><font size="1">小</font></a></li>
+                </ul>
+            </div>
+            <div class="btn-group">
+              <a class="btn" data-edit="bold" title="Bold (Ctrl/Cmd+B)"><i class="icon-bold"></i></a>
+              <a class="btn" data-edit="italic" title="Italic (Ctrl/Cmd+I)"><i class="icon-italic"></i></a>
+              <a class="btn" data-edit="strikethrough" title="Strikethrough"><i class="icon-strikethrough"></i></a>
+              <a class="btn" data-edit="underline" title="Underline (Ctrl/Cmd+U)"><i class="icon-underline"></i></a>
+            </div>
+            <div class="btn-group">
+              <a class="btn" data-edit="insertunorderedlist" title="Bullet list"><i class="icon-list-ul"></i></a>
+              <a class="btn" data-edit="insertorderedlist" title="Number list"><i class="icon-list-ol"></i></a>
+              <a class="btn" data-edit="outdent" title="Reduce indent (Shift+Tab)"><i class="icon-indent-left"></i></a>
+              <a class="btn" data-edit="indent" title="Indent (Tab)"><i class="icon-indent-right"></i></a>
+            </div>
+            <div class="btn-group">
+              <a class="btn" data-edit="justifyleft" title="Align Left (Ctrl/Cmd+L)"><i class="icon-align-left"></i></a>
+              <a class="btn" data-edit="justifycenter" title="Center (Ctrl/Cmd+E)"><i class="icon-align-center"></i></a>
+              <a class="btn" data-edit="justifyright" title="Align Right (Ctrl/Cmd+R)"><i class="icon-align-right"></i></a>
+              <a class="btn" data-edit="justifyfull" title="Justify (Ctrl/Cmd+J)"><i class="icon-align-justify"></i></a>
+            </div>
+            <div class="btn-group">
+            <a class="btn dropdown-toggle" data-toggle="dropdown" title="Hyperlink"><i class="icon-link"></i></a>
+              <div class="dropdown-menu input-append">
+                <input class="span2" placeholder="URL" type="text" data-edit="createLink"/>
+                <button class="btn" type="button">添加</button>
+              </div>
+              <a class="btn" data-edit="unlink" title="Remove Hyperlink"><i class="icon-cut"></i></a>
+
+            </div>
+            
+            <div class="btn-group">
+              <a class="btn" title="Insert picture (or just drag & drop)" id="pictureBtn"><i class="icon-picture"></i></a>
+              <input type="file" data-role="magic-overlay" data-target="#pictureBtn" data-edit="insertImage" />
+            </div>
+            <div class="btn-group">
+              <a class="btn" data-edit="undo" title="Undo (Ctrl/Cmd+Z)"><i class="icon-undo"></i></a>
+              <a class="btn" data-edit="redo" title="Redo (Ctrl/Cmd+Y)"><i class="icon-repeat"></i></a>
+            </div>
+            <input type="text" data-edit="inserttext" id="voiceBtn" x-webkit-speech="">
+          </div>
+          <div id="editor">
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-info edit-sub">发布</button>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="modal-backdrop in"></div> -->
+      <div class="modal fade" id="postAlt" tabindex="-1" role="dialog" aria-labelledby="ModalLabel">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="ModalLabel">提示</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="Modal" tabindex="-1" role="dialog" aria-labelledby="ModalLabel">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title" id="ModalLabel"></h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">知道了</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script src="assets/js/jquery.min.js"></script>
+      <script src="assets/js/jquery.hotkeys.js"></script>
+      <script src="assets/js/bootstrap.min.js"></script>
+      <script src="assets/js/bootstrap-wysiwyg.js"></script>
+      <script src="assets/js/bootstrap-datetimepicker.min.js"></script>
+      <script src="assets/js/bootstrap-datetimepicker.zh-CN.js"></script>
+      <script src="assets/js/base.js"></script>
+      <script type="text/javascript">
+            $(function(){
+              function initToolbarBootstrapBindings() {
+                var fonts = ['Serif', 'Sans', 'Arial', 'Arial Black', 'Courier', 
+                      'Courier New', 'Comic Sans MS', 'Helvetica', 'Impact', 'Lucida Grande', 'Lucida Sans', 'Tahoma', 'Times',
+                      'Times New Roman', 'Verdana'],
+                      fontTarget = $('[title=Font]').siblings('.dropdown-menu');
+                $.each(fonts, function (idx, fontName) {
+                    fontTarget.append($('<li><a data-edit="fontName ' + fontName +'" style="font-family:\''+ fontName +'\'">'+fontName + '</a></li>'));
+                });
+                $('a[title]').tooltip({container:'body'});
+                $('.dropdown-menu input').click(function() {return false;})
+                  .change(function () {$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle');})
+                  .keydown('esc', function () {this.value='';$(this).change();});
+
+                $('[data-role=magic-overlay]').each(function () { 
+                  var overlay = $(this), target = $(overlay.data('target')); 
+                  overlay.css('opacity', 0).css('position', 'absolute').offset(target.offset()).width(target.outerWidth()).height(target.outerHeight());
+                });
+                if ("onwebkitspeechchange"  in document.createElement("input")) {
+                  var editorOffset = $('#editor').offset();
+                  $('#voiceBtn').css('position','absolute').offset({top: editorOffset.top, left: editorOffset.left+$('#editor').innerWidth()-35});
+                } else {
+                  $('#voiceBtn').hide();
+                }
+            };
+            initToolbarBootstrapBindings();
+            $('#editor').wysiwyg();//加载编辑器
+
+            $('#time').datetimepicker({
+              language:  'zh-CN',
+              weekStart: 1,
+              todayBtn:  1,
+              autoclose: 1,
+              todayHighlight: 1,
+              startView: 2,
+              minView: 2,
+              forceParse: 0
+            });//加载时间控件
+
+            //获取分类
+            $.getJSON("/news/admin/category",{},function(data){
+              if (data && !data['status']) {
+                for (var i = 0; i < data.length; i++) {
+                  $("#category").append("<option value=\""+data[i]['cid']+"\">"+data[i]['name']+"</option>");
+                }
+              }
+            });
+
+          });
+
+          $(".edit-sub").click(function(){
+            var title = $.trim($("#title").val());
+            var zxfrom = $.trim($("#from").val());
+            var author = $.trim($("#author").val());
+            var fromurl = $.trim($("#fromurl").val());
+            var time = $.trim($("#time").val());
+            var click = $.trim($("#click").val());
+            var category = $.trim($("#category").val());
+            var tag = $.trim($("#tag").val());
+            var content = $.trim($("#editor").html());
+            var tags = "";
+            if (title == "") {
+              modalAlt("等一下,有问题","好歹有个标题吧？");
+              return false;
+            }
+            if (author == "") {
+              modalAlt("等一下,有问题","原文作者是谁？");
+              return false;
+            }
+            if (time == "") {
+              modalAlt("等一下,有问题","什么时候发布的？这个得填");
+              return false;
+            }
+            if (category == "") {
+              modalAlt("等一下,有问题","你得告诉我这篇文章属于哪个分类");
+              return false;
+            }
+            if (content == "") {
+              modalAlt("等一下,有问题","不写文章会让你提交么？");
+              return false;
+            }
+            if (click != "" && !isNaN(click)) {
+              modalAlt("等一下,有问题","点击量难道可以不是数字吗？");
+            }
+            if (tag != "") {
+              var tagArr = new Array();
+              tagArr = tag.split(" ");
+              for (var i = 0; i < tagArr.length; i++) {
+                if (i == tagArr.length - 1) {
+                  tags += tagArr[i];
+                }else{
+                  tags += tagArr[i] + "####";
+                }
+              }
+            }
+            $.ajax({
+              url:"/news/admin/post",
+              type:"post",
+              data:{
+                title:title,
+                author:author,
+                zxfrom:zxfrom,
+                fromurl:fromurl,
+                time:time,
+                click:click,
+                category:category,
+                tags:tags,
+                content:content
+              },
+              dataType:"json",
+              beforeSend:function(){
+                $(".modal-title").html("提示");
+                $(".modal-body").html("<h4 align=\"center\">正在提交，请稍等</h4><br><div class=\"progress\"><div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: 100%\"><span class=\"sr-only\">  </span></div></div>");
+                $('#postAlt').modal({
+                  backdrop:"static",
+                  keyboard:false
+                });
+              },
+              success:function(json){
+                if (json.status == "success") {
+                  $(".modal-body").html("已提交");
+                  setInterval(function(){
+                    location.href = location.href;
+                  },2000);
+                }else{
+                  $(".modal-body").html("提交失败，检查网络问题，稍后再试！");
+                  setInterval(function(){
+                    $("#postAlt").modal('hide');
+                  },2000);
+                }
+              }
+            });
+          });
+      </script>
+  </body>
+</html>

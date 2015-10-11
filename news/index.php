@@ -10,15 +10,20 @@ $app->post("/subscribe","subscribe");
 
 $app->get("/beta","beta");
 
-//导员博客
+//博客
 $app->get("/guide/:page","getAllguide");
+$app->get("/student/:page","getStunews");
 
 //报告会
-$app->get("/report/:type","getReport");
+$app->get("/report/","getReport");
 
 //管理员
+$app->post("/admin/post","postNews");
 $app->post("/admin/login","login");
 $app->post("/admin/logout","logout");
+$app->get("/admin/news/:page/:limit/:type","getAllnews");
+$app->get("/admin/examine/:page/:limit/:type","getExamine");
+$app->get("/admin/category","categories");
 
 $app->run();
 ?>

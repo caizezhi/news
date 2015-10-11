@@ -1,13 +1,14 @@
 <?php
+session_start();
 
-define('REPORT', 3);//user±íÖÐ±¨¸æ·ÖÀà
+define('REPORT', 3);//æŠ¥å‘Šè®²åº§åˆ†ç±»ID
 
-define('GUIDE', 2);//user±íÖÐµ¼Ô±·ÖÀà
-define('GUIDENUM', 4);//õú±øµ¼²©Ã¿Ò³µ¼Ô±ÊýÁ¿
-define('GUIDEBLOG', 5);//Ã¿Î»µ¼Ô±×ÊÑ¶ÊýÁ¿
+define('GUIDE', 2);//å¯¼å‘˜åšå®¢typeId
+define('GUIDENUM', 4);//æ¯é¡µæ˜¾ç¤ºå¯¼å‘˜æ•°é‡
+define('GUIDEBLOG', 5);//æ¯é¡µæ˜¾ç¤ºåšå®¢æ•°é‡
 
 /*********Common************/
-function dbMysql()//Á¬½ÓÊý¾Ý¿â
+function dbMysql()//æ•°æ®åº“
 {
 	require "./config.db.php";
     $db = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);
@@ -16,27 +17,25 @@ function dbMysql()//Á¬½ÓÊý¾Ý¿â
     return $db;
 }
 
-//·µ»Ø´íÎó
 function error($errMsg)
 {
 	$err = array("status"=>"error","errmsg"=>$errMsg);
 	output($err);
 }
 
-//Êä³öjson
+//ç»Ÿä¸€è¾“å‡º
 function output($arr)
 {
 	echo json_encode($arr);
 }
 
-//Í³Ò»µÇÂ¼ÑéÖ¤
 function checkLogin()
 {
 	$ucenter = new Application_Model_Ucenter();
 	return $ucenter->checklogin();
 }
 
-//½«Êý×éÖØÐÂÅÅÐò
+//é‡æ–°æŽ’åº
 function sortArr($array,$keys,$type='asc'){
 	if(!is_array($array)||empty($array)||!in_array(strtolower($type),array('asc','desc'))) return '';
 	$keysvalue=array();
@@ -65,21 +64,15 @@ function sortArr($array,$keys,$type='asc'){
 	return $keysvalue;
 }
 
-function beta()
-{
-	$check = checkLogin();
-	var_dump($check);
-}
-
 /************News*************/
 
-//$pageÒ³Êý£¬$type: ×ÊÑ¶·ÖÀà
+//èŽ·å–èµ„è®¯
 function news($page,$limit,$type)
 {
-	if (!checkLogin()) {//Î´µÇÂ¼
-		newsNotLogin($page,$limit,$type);
+	if (!checkLogin()) {
+		newsNotLogin($page,$limit,$type);//æœªç™»å½•æŒ‰æ—¶é—´è¿”å›ž
 	}else{
-		newsLogin($page,$limit,$type);
+		newsLogin($page,$limit,$type);//ç™»å½•æŒ‰è®¢é˜…è¿”å›ž
 	}
 }
 
@@ -94,7 +87,7 @@ function newsNotLogin($page,$limit,$type)
 	$db = dbMysql();
 	$guide = $db->query($sql);
 	$guide = $guide->fetch(PDO::FETCH_OBJ);
-	$pageNum = ceil($guide->num / $limit);//×ÜÒ³Êý
+	$pageNum = ceil($guide->num / $limit);//æ€»é¡µæ•°
 	if (!is_numeric($page) || ($page > $pageNum) || ($page < 1)) {
 		$page = 1;
 	}
@@ -109,14 +102,14 @@ function newsNotLogin($page,$limit,$type)
 	}
 }
 
-function newsLogin($page,$limit,$type)//¸öÐÔ»¯¶©ÔÄÊä³ö
+function newsLogin($page,$limit,$type)
 {
 	$page = trim($page);
 	$type = trim($type);
 	if (!is_numeric($page) || !is_numeric($type)) {
 		return error("invalid request");
 	}
-	$uid = 1234;//½ö¹©²âÊÔÊ¹ÓÃ
+	$uid = 1234;//æµ‹è¯•Id
 	$sql = "SELECT `tag` FROM `zx_subscription` WHERE `uid` = {$uid}";
 	$db = dbMysql();
 	$subs = $db->query($sql)->fetchAll(PDO::FETCH_OBJ);
@@ -133,14 +126,17 @@ function newsLogin($page,$limit,$type)//¸öÐÔ»¯¶©ÔÄÊä³ö
 		}
 		$article['count'] += count($aids);
 	}
-	$pageNum = ceil($article['count'] / $limit);//×ÜÒ³Êý
+	$pageNum = ceil($article['count'] / $limit);
 	if (!is_numeric($page) || ($page > $pageNum) || ($page < 1)) {
 		$page = 1;
 	}
-	$article['news'] = sortArr($article['news'],'time','desc');//°´±à¼­Ê±¼äÅÅÐò
+	$article['news'] = sortArr($article['news'],'time','desc');//æŒ‰æ—¶é—´é‡æ–°æŽ’åº
 	$from = ($page-1) * $limit;
 	$articles = array_slice($article['news'], $from, $limit);
-	output($articles);
+	if($articles){
+		return output($articles);
+	}
+	return error("null");
 }
 
 //get news by id
@@ -160,7 +156,7 @@ function getNews($aid)
 	}
 }
 
-function subscribe()//¶©ÔÄ
+function subscribe()
 {
 	$request = Slim::getInstance()->request();
 	@$tag = trim($request->post('tag'));
@@ -168,7 +164,7 @@ function subscribe()//¶©ÔÄ
 		return error("invalid request");
 	}
 	// $uid = $_SESSION['uid'];
-	$uid = 1234;//²âÊÔÖ®ÓÃ
+	$uid = 1234;//æµ‹è¯•Id
 	$sql = "INSERT INTO `zx_subscription` (`uid`,`tag`) VALUES ({$uid},'{$tag}')";
 	$db = dbMysql();
 	$result = $db->query($sql);
@@ -182,16 +178,29 @@ function subscribe()//¶©ÔÄ
 /***********report**********/
 function getReport()
 {
-	// $today = strtotime(date('Y-m-d'));
-	$today = strtotime(date('Y-m-d',strtotime('-10 day')));
-	$tomorrow = strtotime(date('Y-m-d',strtotime('+1 day')));
-	$sql = "SELECT * FROM `zx_article` WHERE `type` = ".REPORT." AND `time` >= ".$today." AND `time` < ".$tomorrow." ORDER BY `time` DESC LIMIT 3";
-	$db = dbMysql();
-	$report = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-	for ($i=0; $i < count($report); $i++) {
-		$return[$i]['aid'] = $report[$i]['aid'];
-		$return[$i]['time'] = $report[$i]['time'];
-		$return[$i]['title'] = $report[$i]['title'];
+	$day[1] = strtotime(date('Y-m-d',strtotime('0 day')));
+	$day[2] = strtotime(date('Y-m-d',strtotime('+1 day')));
+	$day[3] = strtotime(date('Y-m-d',strtotime('+2 day')));
+	$day[4] = strtotime(date('Y-m-d',strtotime('+3 day')));
+	for ($date=1; $date < 5; $date++) {
+		if ($date < 4) {
+			$sql = "SELECT `aid`,`time`,`title`,`fromurl` FROM `zx_article` WHERE `type` = ".REPORT." AND `time` >= ".$day[$date]." AND `time` < ".$day[$date + 1]." ORDER BY `time` DESC LIMIT 3";
+		}else{
+			$sql = "SELECT `aid`,`time`,`title`,`fromurl` FROM `zx_article` WHERE `type` = ".REPORT." AND `time` >= ".$day[$date]." ORDER BY `time` DESC LIMIT 3";
+		}
+		$db = dbMysql();
+		$report = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+		if ($report) {
+			for ($i=0; $i < count($report); $i++) {
+				$return[$date][$i]['aid'] = $report[$i]['aid'];
+				$return[$date][$i]['time'] = $report[$i]['time'];
+				$title[$i] = explode("ï¼š", $report[$i]['title']);
+				$return[$date][$i]['title'] = $title[$i][1];
+				$return[$date][$i]['fromurl'] = $report[$i]['fromurl'];
+			}
+		}else{
+			$return[$date] = null;
+		}
 	}
 	if ($return) {
 		output($return);
@@ -201,8 +210,17 @@ function getReport()
 }
 
 
-/***********Guide**********/
-//·µ»Øµ¼Ô±ID¡¢ÕæÊµÐÕÃû¡¢Í·Ïñ¡¢×îÐÂ×ÊÑ¶
+/***********Blog**********/
+
+function getStunews()
+{
+	$sql = "SELECT `stuname`,`title`,`url` FROM `zx_stunews`";
+	$db = dbMysql();
+	$res = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+	if ($res) {
+		output($res);
+	}
+}
 function getAllguide($page)
 {
 	$page = trim($page);
@@ -213,7 +231,7 @@ function getAllguide($page)
 	$db = dbMysql();
 	$guide = $db->query($sql);
 	$guide = $guide->fetch(PDO::FETCH_OBJ);
-	$pageNum = ceil($guide->num / GUIDENUM);//×ÜÒ³Êý
+	$pageNum = ceil($guide->num / GUIDENUM);//Ã—ÃœÃ’Â³ÃŠÃ½
 	if (!is_numeric($page) || ($page > $pageNum) || ($page < 1)) {
 		$page = 1;
 	}
@@ -275,4 +293,138 @@ function logout()
 	unset($_SESSION['type']);
 	output(array("status"=>"success","action"=>"logout"));
 }
+
+function categories()
+{
+	if (!isset($_SESSION['admin']) || !$_SESSION['admin']) {
+		return error("forbidden");
+	}
+	$sql = "SELECT `cid`,`name` FROM `zx_category` ORDER BY `cid` ASC";
+	$db = dbMysql();
+	$result = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+	if ($result) {
+		output($result);
+	}else{
+		error("null");
+	}
+}
+
+function postNews(){
+	if (!isset($_SESSION['admin']) || !$_SESSION['admin']) {
+		return error("forbidden");
+	}
+	@$title = trim($_POST['title']);
+	@$author = trim($_POST['author']);
+	@$from = trim($_POST['from']);
+	@$fromurl = trim($_POST['fromurl']);
+	@$time = trim($_POST['time']);
+	@$click = trim($_POST['click']);
+	@$type = trim($_POST['category']);
+	@$tags = trim($_POST['tags']);
+	@$content = trim($_POST['content']);
+	$time = strtotime($time.":00");
+	if (empty($title) || empty($author) || empty($time) || empty($type) || empty($content) || !is_numeric($type) || !is_numeric($click)) {
+		return error("invalid parameter");
+	}
+	$thumb = "";
+	$edittime = time();
+	$top = 0;
+	$realclick = 0;
+	$examine = 0;
+	$reviewer = 0;
+	$reviewtime = 0;
+	$sql = "INSERT INTO `zx_article` (`author`,`time`,`edittime`,`from`,`fromurl`,`type`,`thumb`,`top`,`click`,`realclick`,`title`,`content`,`examine`,`reviewer`,`reviewtime`) VALUES ('{$author}',{$time},{$edittime},'{$from}','{$fromurl}',{$type},'{$thumb}',{$top},{$click},{$realclick},'{$title}','{$content}',{$examine},{$reviewer},{$reviewtime})";
+	try{
+		$db = dbMysql();
+		$stmt = $db->prepare($sql);
+		$stmt->execute();
+		$aid = $db->lastInsertId();
+
+		if (!empty($tags)) {
+			$tags = explode("####", $tags);
+
+			for ($i=0; $i < count($tags); $i++) {
+				$sql = "INSERT INTO `zx_tag` (`aid`,`tag`) VALUES ({$aid},'{$tags[$i]}')";
+				$result = $db->query($sql);
+			}
+		}
+		if ($result) {
+			return output(array("status"=>"success","action"=>"postnews"));
+		}
+	} catch (Exception $e){
+		return error("error");
+	}
+}
+
+function getAllnews($page,$limit,$type)
+{
+	$page = trim($page);
+	$type = trim($type);
+	if (!is_numeric($page) || !is_numeric($type)) {
+		return error("invalid request");
+	}
+	$sql = "SELECT count(*) AS num FROM `zx_article` WHERE `type` = {$type}";
+	$db = dbMysql();
+	$guide = $db->query($sql);
+	$guide = $guide->fetch(PDO::FETCH_OBJ);
+	$pageNum = ceil($guide->num / $limit);
+	if (!is_numeric($page) || ($page > $pageNum) || ($page < 1)) {
+		$page = 1;
+	}
+	$from = ($page-1) * $limit;
+	$sql = "SELECT `aid`,`author`,`time`,`editor`,`from`,`type`,`realclick`,`title`,`examine`,`reviewer`,`reviewtime` FROM `zx_article` WHERE `type` = {$type} ORDER BY `edittime` DESC LIMIT {$from},{$limit}";
+	$get = $db->query($sql);
+	$res = $get->fetchAll(PDO::FETCH_OBJ);
+	if ($res) {
+		for ($i=0; $i < count($res); $i++) {
+			$sql_u = "SELECT `realname` FROM `zx_user` WHERE `uid` = ".$res[$i]->editor;
+			$sql_c = "SELECT `name` FROM `zx_category` WHERE `cid` = ".$res[$i]->type;
+			$u = $db->query($sql_u)->fetch(PDO::FETCH_OBJ);
+			$res[$i]->editor = $u->realname;
+			$c = $db->query($sql_c)->fetch(PDO::FETCH_OBJ);
+			$res[$i]->type = $c->name;
+		}
+		output($res);
+	}else{
+		return error("none");
+	}
+}
+
+function getExamine($page,$limit,$type)
+{
+	$page = trim($page);
+	$type = trim($type);
+	if (!is_numeric($page) || !is_numeric($type)) {
+		return error("invalid request");
+	}
+	$sql = "SELECT count(*) AS num FROM `zx_article` WHERE `type` = {$type} AND `examine` = 0";
+	$db = dbMysql();
+	$guide = $db->query($sql);
+	$guide = $guide->fetch(PDO::FETCH_OBJ);
+	$pageNum = ceil($guide->num / $limit);//æ€»é¡µæ•°
+	if (!is_numeric($page) || ($page > $pageNum) || ($page < 1)) {
+		$page = 1;
+	}
+	$from = ($page-1) * $limit;
+	$sql = "SELECT `aid`,`author`,`time`,`editor`,`from`,`type`,`realclick`,`title`,`reviewer`,`reviewtime` FROM `zx_article` WHERE `type` = {$type} AND `examine` = 0 ORDER BY `edittime` DESC LIMIT {$from},{$limit}";
+	$get = $db->query($sql);
+	$res = $get->fetchAll(PDO::FETCH_OBJ);
+	if ($res) {
+		for ($i=0; $i < count($res); $i++) {
+			$sql_u = "SELECT `realname` FROM `zx_user` WHERE `uid` = ".$res[$i]->editor;
+			$sql_e = "SELECT `realname` FROM `zx_user` WHERE `uid` = ".$res[$i]->reviewer;
+			$sql_c = "SELECT `name` FROM `zx_category` WHERE `cid` = ".$res[$i]->type;
+			$u = $db->query($sql_u)->fetch(PDO::FETCH_OBJ);
+			$res[$i]->editor = $u->realname;
+			$e = $db->query($sql_u)->fetch(PDO::FETCH_OBJ);
+			$res[$i]->reviewer = $e->realname;
+			$c = $db->query($sql_c)->fetch(PDO::FETCH_OBJ);
+			$res[$i]->type = $c->name;
+		}
+		output($res);
+	}else{
+		return error("none");
+	}
+}
+
 ?>
